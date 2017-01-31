@@ -20,21 +20,20 @@ abstract class OrxoBus {
 
     protected abstract fun provideRelay(): Relay<Any, Any>
 
-
-    fun unregister(_object: Any) {
-        subscriptions[_object]?.apply {
+    fun unregister(_subscriber: Any) {
+        subscriptions[_subscriber]?.apply {
             clear()
-            subscriptions.remove(_object)
+            subscriptions.remove(_subscriber)
         }
     }
 
-    fun <T> getEvent(_subscriber: Any, _event: Class<T>, _scheduler: Scheduler, _action: Action1<T>) = this@OrxoBus.relay
+    fun <T> getEvent(_subscriber: Any, _event: Class<T>, _scheduler: Scheduler, _action: Action1<T>) = relay
             .ofType(_event)
             .observeOn(_scheduler)
             .subscribe(_action)
             .register(_subscriber)
 
-    fun send(_subscriber: Any) = relay.call(_subscriber)
+    fun post(_event: Any) = relay.call(_event)
 
     private fun register(_object: Any, subscription: Subscription) {
         subscriptions[_object] = (subscriptions[_object] ?: CompositeSubscription())
@@ -44,18 +43,13 @@ abstract class OrxoBus {
     }
 
     private fun Subscription.register(_subscriber: Any) = register(_subscriber, this)
-
-
 }
 
 class OrxoHandler(val bus: OrxoBus, private val subscriber: Any, private val scheduler: Scheduler) {
 
-    fun <T> subscribe(_event: Class<T>, _action1: Action1<T>) {
-        subscribe(_event, scheduler, _action1)
-    }
-
-    fun <T> subscribe(_event: Class<T>, _schedule: Scheduler, _action1: Action1<T>) {
-        bus.getEvent(subscriber, _event, _schedule, _action1);
+    @JvmOverloads
+    fun <T> subscribe(_event: Class<T>, _schedule: Scheduler = scheduler, _action1: Action1<T>) {
+        bus.getEvent(subscriber, _event, _schedule, _action1)
     }
 }
 
