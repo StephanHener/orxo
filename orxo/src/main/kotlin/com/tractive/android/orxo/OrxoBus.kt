@@ -1,17 +1,19 @@
 package com.tractive.android.orxo
 
-import com.jakewharton.rxrelay.Relay
+import com.jakewharton.rxrelay.*
 import rx.Scheduler
 import rx.Subscription
+import rx.android.schedulers.AndroidSchedulers
 import rx.functions.Action1
 import rx.subscriptions.CompositeSubscription
 import java.util.*
 
 
-abstract class OrxoBus {
+abstract class OrxoBus(val isSerialized: Boolean = false) {
+
 
     val relay: Relay<Any, Any> by lazy {
-        provideRelay()
+        if (isSerialized) SerializedRelay(provideRelay()) else provideRelay()
     }
 
     private val subscriptions: HashMap<Any, CompositeSubscription> by lazy {
@@ -27,7 +29,8 @@ abstract class OrxoBus {
         }
     }
 
-    fun <T> getEvent(_subscriber: Any, _event: Class<T>, _scheduler: Scheduler, _action: Action1<T>) = relay
+    @JvmOverloads
+    fun <T> getEvent(_subscriber: Any, _event: Class<T>, _scheduler: Scheduler = AndroidSchedulers.mainThread(), _action: Action1<T>) = relay
             .ofType(_event)
             .observeOn(_scheduler)
             .subscribe(_action)
@@ -43,9 +46,21 @@ abstract class OrxoBus {
     }
 
     private fun Subscription.register(_subscriber: Any) = register(_subscriber, this)
+
+    class Behaviour(isSerialized: Boolean = false) : OrxoBus(isSerialized) {
+        override fun provideRelay(): Relay<Any, Any> = BehaviorRelay.create()
+    }
+
+    class Publish(isSerialized: Boolean = false) : OrxoBus(isSerialized) {
+        override fun provideRelay(): Relay<Any, Any> = PublishRelay.create()
+    }
+
+    class Replay(isSerialized: Boolean = false) : OrxoBus(isSerialized) {
+        override fun provideRelay(): Relay<Any, Any> = ReplayRelay.create()
+    }
 }
 
-class OrxoHandler(val bus: OrxoBus, private val subscriber: Any, private val scheduler: Scheduler) {
+class Orxo(private val subscriber: Any, val bus: OrxoBus, private val scheduler: Scheduler) {
 
     @JvmOverloads
     fun <T> subscribe(_event: Class<T>, _schedule: Scheduler = scheduler, _action1: Action1<T>) {
