@@ -66,6 +66,10 @@ class Orxo(private val subscriber: Any, val bus: OrxoBus, private val scheduler:
     fun <T> subscribe(_event: Class<T>, _schedule: Scheduler = scheduler, _action1: Action1<T>) {
         bus.getEvent(subscriber, _event, _schedule, _action1)
     }
+
+    fun unregister() {
+        bus.unregister(subscriber)
+    }
 }
 
 
