@@ -34,7 +34,7 @@ abstract class OrxoBus(val isSerialized: Boolean = false) {
     fun <T> getEvent(_subscriber: Any, _event: Class<T>, _scheduler: Scheduler = AndroidSchedulers.mainThread(), _action: Action1<T>) = relay
             .ofType(_event)
             .observeOn(_scheduler)
-            .onBackpressureDrop()
+            .onBackpressureBuffer()
             .subscribe(_action, Action1 { Log.i("Orxo", "Exception in OrxoBus: " + it.message) })
             .register(_subscriber)
 
