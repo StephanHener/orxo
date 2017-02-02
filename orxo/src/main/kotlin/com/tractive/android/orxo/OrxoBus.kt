@@ -1,5 +1,6 @@
 package com.tractive.android.orxo
 
+import android.util.Log
 import com.jakewharton.rxrelay.*
 import rx.Scheduler
 import rx.Subscription
@@ -33,7 +34,8 @@ abstract class OrxoBus(val isSerialized: Boolean = false) {
     fun <T> getEvent(_subscriber: Any, _event: Class<T>, _scheduler: Scheduler = AndroidSchedulers.mainThread(), _action: Action1<T>) = relay
             .ofType(_event)
             .observeOn(_scheduler)
-            .subscribe(_action)
+            .onBackpressureDrop()
+            .subscribe(_action, Action1 { Log.i("Orxo", "Exception in OrxoBus: " + it.message) })
             .register(_subscriber)
 
     fun post(_event: Any) = relay.call(_event)
