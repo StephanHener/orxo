@@ -1,1 +1,1 @@
-include ':orxo-sample', ':orxo'
+include ':orxo'
