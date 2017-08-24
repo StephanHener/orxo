@@ -11,17 +11,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 
-
 abstract class OrxoBus(private val isSerialized: Boolean = false) {
-
 
     private val relay: Relay<Any> by lazy {
         if (isSerialized) provideRelay().toSerialized() else provideRelay()
     }
 
     private val disposables: MutableMap<Any, CompositeDisposable> = mutableMapOf()
-
-
 
     protected abstract fun provideRelay(): Relay<Any>
 
